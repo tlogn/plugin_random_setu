@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"os"
 	"path"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -146,7 +147,7 @@ func init() { // 插件主体
 	engine.OnFullMatch(`随机涩图`).SetBlock(true).Limit(ctxext.LimitByUser).
 		Handle(func(ctx *zero.Ctx) {
 			imgName, err := randDownloadImage()
-			pathName := path.Join(imgPath, imgName)
+			pathName, _ := filepath.Abs(path.Join(imgPath, imgName))
 			if err != nil {
 				ctx.SendChain(message.Text("寄！！！ " + imgName + " 自己搜吧"))
 				return
