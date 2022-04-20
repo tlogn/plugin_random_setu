@@ -10,8 +10,6 @@ import (
 	"math/rand"
 	"os"
 	"path"
-	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -19,10 +17,6 @@ import (
 	sql "github.com/FloatTech/sqlite"
 	control "github.com/FloatTech/zbputils/control"
 	"github.com/FloatTech/zbputils/ctxext"
-	fileutil "github.com/FloatTech/zbputils/file"
-	imagepool "github.com/FloatTech/zbputils/img/pool"
-	"github.com/FloatTech/zbputils/math"
-	"github.com/FloatTech/zbputils/process"
 	zero "github.com/wdvxdr1123/ZeroBot"
 	"github.com/wdvxdr1123/ZeroBot/message"
 )
@@ -176,6 +170,7 @@ func init() { // 插件主体
 			})*/
 }
 
+/*
 // size 返回缓冲池指定类型的现有大小
 func (p *imgpool) size(imgtype string) int {
 	return len(p.pool[imgtype])
@@ -267,4 +262,4 @@ func (p *imgpool) remove(imgtype string, id int64) error {
 	p.dbmu.Lock()
 	defer p.dbmu.Unlock()
 	return p.db.Del(imgtype, fmt.Sprintf("WHERE pid=%d", id))
-}
+}*/
