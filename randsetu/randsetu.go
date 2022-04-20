@@ -97,7 +97,7 @@ func randSetuApi() (r resultjson, err error) {
 func downloadImageFromID(id int64) (string, error) {
 	illust, err := pixiv.Works(id)
 	fmt.Println(id, illust, err)
-	for err != nil {
+	for err != nil || illust.ImageUrls[0] == "" {
 		illust, err = pixiv.Works(id)
 	}
 	u := illust.ImageUrls[0]
