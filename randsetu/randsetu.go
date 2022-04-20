@@ -68,7 +68,6 @@ func RandStr(length int) string {
 // soutuapi 随机请求api
 func randSetuApi() (r resultjson, err error) {
 	str := RandStr(rand.Intn(5) + 1)
-	fmt.Println("https://copymanga.azurewebsites.net/api/pixivel?" + str + "?page=0")
 	data, err := web.GetData("https://copymanga.azurewebsites.net/api/pixivel?" + str + "?page=0")
 	if err != nil {
 		return
@@ -82,7 +81,6 @@ func randSetuApi() (r resultjson, err error) {
 
 func downloadImageFromID(id int64) (string, error) {
 	illust, err := pixiv.Works(id)
-	fmt.Println(id, illust, err)
 	for err != nil || illust.ImageUrls[0] == "" {
 		illust, err = pixiv.Works(id)
 	}
@@ -105,6 +103,8 @@ func randDownloadImage() (string, error) {
 
 func init() { // 插件主体
 	os.MkdirAll(imgPath, 0777)
+	imgFIFO.init()
+	imgFIFO.run()
 	engine := control.Register("randsetu", &control.Options{
 		DisableOnDefault: false,
 		Help: "- 随机涩图\n" +
@@ -135,7 +135,6 @@ func (q *ImgFIFO) init() {
 	for _, file := range dir {
 		q.queue = append(q.queue, file.Name())
 	}
-	q.run()
 }
 
 func (q *ImgFIFO) run() {
