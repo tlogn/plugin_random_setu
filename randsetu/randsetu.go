@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/FloatTech/zbputils/web"
+	"io/ioutil"
 	"math/rand"
 	"os"
 	"path"
@@ -15,7 +16,6 @@ import (
 	"time"
 
 	"github.com/FloatTech/AnimeAPI/pixiv"
-	sql "github.com/FloatTech/sqlite"
 	control "github.com/FloatTech/zbputils/control"
 	"github.com/FloatTech/zbputils/ctxext"
 	zero "github.com/wdvxdr1123/ZeroBot"
@@ -36,36 +36,22 @@ type resultjson struct {
 	Message string `json:"message"`
 }
 
-// Pools 图片缓冲池
-type imgpool struct {
-	db     *sql.Sqlite
-	dbmu   sync.RWMutex
-	path   string
-	max    int
-	pool   map[string][]*message.MessageSegment
-	poolmu sync.Mutex
-}
-
-func (p *imgpool) List() (l []string) {
-	var err error
-	p.dbmu.RLock()
-	defer p.dbmu.RUnlock()
-	l, err = p.db.ListTables()
-	if err != nil {
-		l = []string{"涩图"}
-	}
-	return l
+type ImgFIFO struct {
+	queue []string
+	mu    sync.Mutex
 }
 
 var (
 	imgPath = "data/random_setu/"
-	dbName  = "RandSetu.db"
-	pool    = &imgpool{
-		db:   &sql.Sqlite{},
-		path: imgPath,
-		max:  100,
-		pool: make(map[string][]*message.MessageSegment),
+	imgFIFO = ImgFIFO{
+		queue: make([]string, 0),
+		mu:    sync.Mutex{},
 	}
+)
+
+const (
+	updateInterval = time.Second * 20
+	imgFIFOLimit   = 100
 )
 
 func RandStr(length int) string {
@@ -118,155 +104,86 @@ func randDownloadImage() (string, error) {
 }
 
 func init() { // 插件主体
-	os.MkdirAll(imgPath, 777)
+	os.MkdirAll(imgPath, 0777)
 	engine := control.Register("randsetu", &control.Options{
 		DisableOnDefault: false,
 		Help: "- 随机涩图\n" +
 			"- >randsetu status",
-		PublicDataFolder: "RandSetu",
+		PublicDataFolder: "Random_setu",
 	})
-	/*
-		getdb := ctxext.DoOnceOnSuccess(func(ctx *zero.Ctx) bool {
-			// 如果数据库不存在则下载
-			pool.db.DBPath = engine.DataFolder() + dbName
-			_, _ = fileutil.GetLazyData(pool.db.DBPath, false, false)
-			err := pool.db.Open()
-			if err != nil {
-				ctx.SendChain(message.Text("ERROR:", err))
-				return false
-			}
-			for _, imgtype := range pool.List() {
-				if err := pool.db.Create(imgtype, &pixiv.Illust{}); err != nil {
-					ctx.SendChain(message.Text("ERROR:", err))
-					return false
-				}
-			}
-			return true
-		})
-	*/
+
 	engine.OnFullMatch(`随机涩图`).SetBlock(true).Limit(ctxext.LimitByUser).
 		Handle(func(ctx *zero.Ctx) {
-			imgName, err := randDownloadImage()
+			imgName := imgFIFO.get()
 			pathName, _ := filepath.Abs(path.Join(imgPath, imgName))
 			pathName = "file://" + pathName
 			fmt.Println(pathName)
-			if err != nil {
-				ctx.SendChain(message.Text("寄！！！ " + imgName + " 自己搜吧"))
+			if imgName == "" {
+				ctx.SendChain(message.Text("别急别急，在下载了，哼哼哼啊啊啊啊啊啊啊啊"))
 				return
 			}
 			ctx.SendChain(message.Image(pathName))
 		})
-	/*
-		// 查询数据库涩图数量
-		engine.OnFullMatch(">setu status", getdb).SetBlock(true).
-			Handle(func(ctx *zero.Ctx) {
-				state := []string{"[SetuTime]"}
-				pool.dbmu.RLock()
-				defer pool.dbmu.RUnlock()
-				for _, imgtype := range pool.List() {
-					num, err := pool.db.Count(imgtype)
-					if err != nil {
-						num = 0
-					}
-					state = append(state, "\n")
-					state = append(state, imgtype)
-					state = append(state, ": ")
-					state = append(state, fmt.Sprintf("%d", num))
-				}
-				ctx.SendChain(message.Text(state))
-			})*/
 }
 
-/*
-// size 返回缓冲池指定类型的现有大小
-func (p *imgpool) size(imgtype string) int {
-	return len(p.pool[imgtype])
+func (q *ImgFIFO) init() {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+
+	// 读取所有图片到fifo里
+	dir, _ := ioutil.ReadDir(imgPath)
+	for _, file := range dir {
+		q.queue = append(q.queue, file.Name())
+	}
+	q.run()
 }
 
-func (p *imgpool) push(ctx *zero.Ctx, imgtype string, illust *pixiv.Illust) {
-	u := illust.ImageUrls[0]
-	n := u[strings.LastIndex(u, "/")+1 : len(u)-4]
-	m, err := imagepool.GetImage(n)
-	var msg message.MessageSegment
-	f := fileutil.BOTPATH + "/" + illust.Path(0)
-	if err != nil {
-		if fileutil.IsNotExist(f) {
-			// 下载图片
-			if err := illust.DownloadToCache(0); err != nil {
-				ctx.SendChain(message.Text("ERROR:", err))
-				return
+func (q *ImgFIFO) run() {
+	go func() {
+		tick := time.Tick(updateInterval)
+		for range tick {
+			if len(q.queue) < imgFIFOLimit {
+				q.insert()
+			} else {
+				q.pop()
+				q.insert()
 			}
 		}
-		m.SetFile(f)
-		_, _ = m.Push(ctxext.SendToSelf(ctx), ctxext.GetMessage(ctx))
-		msg = message.Image("file:///" + f)
-	} else {
-		msg = message.Image(m.String())
-		if ctxext.SendToSelf(ctx)(msg) == 0 {
-			msg = msg.Add("cache", "0")
-		}
-	}
-	p.poolmu.Lock()
-	p.pool[imgtype] = append(p.pool[imgtype], &msg)
-	p.poolmu.Unlock()
+	}()
 }
 
-func (p *imgpool) pop(imgtype string) (msg *message.MessageSegment) {
-	p.poolmu.Lock()
-	defer p.poolmu.Unlock()
-	if p.size(imgtype) == 0 {
+func (q *ImgFIFO) get() string {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+
+	if len(q.queue) == 0 {
+		return ""
+	}
+
+	return q.queue[rand.Intn(len(q.queue))]
+}
+
+func (q *ImgFIFO) insert() {
+	// 下载的时候不用加锁，只有对queue进行操作再加锁
+	imgName, err := randDownloadImage()
+	for err != nil {
+		imgName, err = randDownloadImage()
+	}
+
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	q.queue = append(q.queue, imgName)
+}
+
+func (q *ImgFIFO) pop() {
+	if len(q.queue) == 0 {
 		return
 	}
-	msg = p.pool[imgtype][0]
-	p.pool[imgtype] = p.pool[imgtype][1:]
-	return
-}
 
-// fill 补充池子
-func (p *imgpool) fill(ctx *zero.Ctx, imgtype string) {
-	times := math.Min(p.max-p.size(imgtype), 2)
-	p.dbmu.RLock()
-	defer p.dbmu.RUnlock()
-	for i := 0; i < times; i++ {
-		illust := &pixiv.Illust{}
-		// 查询出一张图片
-		if err := p.db.Pick(imgtype, illust); err != nil {
-			ctx.SendChain(message.Text("ERROR:", err))
-			continue
-		}
-		// 向缓冲池添加一张图片
-		p.push(ctx, imgtype, illust)
-		process.SleepAbout1sTo2s()
-	}
-}
+	q.mu.Lock()
+	defer q.mu.Unlock()
 
-func (p *imgpool) add(ctx *zero.Ctx, imgtype string, id int64) error {
-	p.dbmu.Lock()
-	defer p.dbmu.Unlock()
-	if err := p.db.Create(imgtype, &pixiv.Illust{}); err != nil {
-		return err
-	}
-	ctx.SendChain(message.Text("少女祈祷中......"))
-	// 查询P站插图信息
-	illust, err := pixiv.Works(id)
-	if err != nil {
-		return err
-	}
-	err = imagepool.SendImageFromPool(strconv.FormatInt(illust.Pid, 10)+"_p0", illust.Path(0), func() error {
-		return illust.DownloadToCache(0)
-	}, ctxext.Send(ctx), ctxext.GetMessage(ctx))
-	if err != nil {
-		return err
-	}
-	// 添加插画到对应的数据库table
-	if err := p.db.Insert(imgtype, illust); err != nil {
-		return err
-	}
-	return nil
+	popName := q.queue[0]
+	q.queue = q.queue[1:]
+	os.Remove(path.Join(imgPath, popName))
 }
-
-func (p *imgpool) remove(imgtype string, id int64) error {
-	p.dbmu.Lock()
-	defer p.dbmu.Unlock()
-	return p.db.Del(imgtype, fmt.Sprintf("WHERE pid=%d", id))
-}*/
