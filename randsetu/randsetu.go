@@ -81,9 +81,13 @@ func randSetuApi() (r resultjson, err error) {
 
 func downloadImageFromID(id int64) (string, error) {
 	illust, err := pixiv.Works(id)
-	for err != nil || illust.ImageUrls[0] == "" {
-		illust, err = pixiv.Works(id)
+	if err != nil || illust.ImageUrls[0] == "" {
+		return "", err
 	}
+	/*
+		for err != nil || illust.ImageUrls[0] == "" {
+			illust, err = pixiv.Works(id)
+		}*/
 	u := illust.ImageUrls[0]
 	n := path.Base(u)
 	return n, illust.Download(0, path.Join(imgPath, n))
@@ -96,7 +100,8 @@ func randDownloadImage() (string, error) {
 	}
 	imgName, err := downloadImageFromID(resJson.Data.Illusts[0].ID)
 	if err != nil {
-		return randDownloadImage()
+		//return randDownloadImage()
+		return "", err
 	}
 	return imgName, nil
 }
@@ -166,7 +171,7 @@ func (q *ImgFIFO) insert() {
 	// 下载的时候不用加锁，只有对queue进行操作再加锁
 	imgName, err := randDownloadImage()
 	for err != nil {
-		imgName, err = randDownloadImage()
+		return
 	}
 
 	q.mu.Lock()
