@@ -148,6 +148,7 @@ func init() { // 插件主体
 		Handle(func(ctx *zero.Ctx) {
 			imgName, err := randDownloadImage()
 			pathName, _ := filepath.Abs(path.Join(imgPath, imgName))
+			pathName = "file://" + pathName
 			fmt.Println(pathName)
 			if err != nil {
 				ctx.SendChain(message.Text("寄！！！ " + imgName + " 自己搜吧"))
