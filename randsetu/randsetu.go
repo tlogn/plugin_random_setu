@@ -106,11 +106,11 @@ func randDownloadImage() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	path, err := downloadImageFromID(resJson.Data.Illusts[0].ID)
+	imgName, err := downloadImageFromID(resJson.Data.Illusts[0].ID)
 	if err != nil {
 		return randDownloadImage()
 	}
-	return path, nil
+	return imgName, nil
 }
 
 func init() { // 插件主体
@@ -142,12 +142,13 @@ func init() { // 插件主体
 	*/
 	engine.OnFullMatch(`随机涩图`).SetBlock(true).Limit(ctxext.LimitByUser).
 		Handle(func(ctx *zero.Ctx) {
-			path, err := randDownloadImage()
+			imgName, err := randDownloadImage()
+			pathName := path.Join(imgPath, imgName)
 			if err != nil {
-				ctx.SendChain(message.Text("寄！！！ %v 自己搜吧", path))
+				ctx.SendChain(message.Text("寄！！！ " + imgName + " 自己搜吧"))
 				return
 			}
-			ctx.SendChain(message.Image(path))
+			ctx.SendChain(message.Image(pathName))
 		})
 	/*
 		// 查询数据库涩图数量
