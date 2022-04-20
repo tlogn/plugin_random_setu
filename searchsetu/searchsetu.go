@@ -18,7 +18,7 @@ func init() {
 		Help:             "- (R18)来点[xxx]\n",
 		PublicDataFolder: "SearchSetuTime",
 	})
-	engine.ApplySingle(ctxext.DefaultSingle).OnRegex("^(R18)?(来点)[\\s\\S]+").SetBlock(true).
+	engine.ApplySingle(ctxext.DefaultSingle).OnRegex("^(R18)?(来点)(\\s\\S)+").SetBlock(true).
 		Handle(func(ctx *zero.Ctx) {
 			imgtype := ctx.State["regex_matched"].([]string)
 			fmt.Println(imgtype)
