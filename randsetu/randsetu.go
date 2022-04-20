@@ -146,7 +146,7 @@ func init() { // 插件主体
 			return true
 		})
 	*/
-	engine.OnRegex(`^随机(.+)$`, ctxext.FirstValueInList(pool)).SetBlock(true).Limit(ctxext.LimitByUser).
+	engine.OnFullMatch(`随机涩图`).SetBlock(true).Limit(ctxext.LimitByUser).
 		Handle(func(ctx *zero.Ctx) {
 			path, err := randDownloadImage()
 			if err != nil {
