@@ -170,7 +170,7 @@ func (q *ImgFIFO) get() string {
 func (q *ImgFIFO) insert() {
 	// 下载的时候不用加锁，只有对queue进行操作再加锁
 	imgName, err := randDownloadImage()
-	for err != nil {
+	for err != nil || imgName == "" {
 		return
 	}
 
