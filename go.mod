@@ -5,8 +5,6 @@ go 1.18
 require (
 	github.com/FloatTech/AnimeAPI v1.3.3-0.20220417132103-df55797131af
 	github.com/FloatTech/zbputils v1.3.3-0.20220417132003-a50e9afdc0c6
-	github.com/Sora233/LoliconApi-Pool v0.0.2
-	github.com/sirupsen/logrus v1.8.1
 	github.com/tidwall/gjson v1.14.0
 	github.com/wdvxdr1123/ZeroBot v1.5.0-mid.0.20220415071800-9e52436ab5c0
 )
@@ -24,6 +22,7 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
+	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 	golang.org/x/image v0.0.0-20220413100746-70e8d0d3baa9 // indirect

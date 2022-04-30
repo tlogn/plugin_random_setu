@@ -2,6 +2,7 @@ package randsetu
 
 import (
 	"fmt"
+	"github.com/tlogn/plugin_random_setu/utils"
 	"path"
 	"path/filepath"
 	"testing"
@@ -13,7 +14,7 @@ func TestRandSetuApi(t *testing.T) {
 }
 
 func TestDownloadImageFromID(t *testing.T) {
-	fmt.Println(downloadImageFromID(97721128))
+	fmt.Println(utils.DownloadImageFromPixiv(97721128, imgPath))
 }
 
 func TestRandDownloadImage(t *testing.T) {
