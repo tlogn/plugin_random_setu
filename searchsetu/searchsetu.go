@@ -1,6 +1,7 @@
 package searchsetu
 
 import (
+	"fmt"
 	"github.com/FloatTech/zbputils/control"
 	"github.com/FloatTech/zbputils/ctxext"
 	"github.com/FloatTech/zbputils/web"
@@ -46,6 +47,8 @@ func init() {
 				url += "&r18=0"
 			}
 
+			fmt.Printf("%v, %v, %v\n", msg, r18, keyword)
+
 			data, err := web.GetData(api + "?tag=" + url2.QueryEscape(`萝莉`) + "&r18=1")
 			if err != nil {
 				ctx.SendChain(message.Text("什么怪xp，涩图数据库都搜不到，建议看看心理医生捏"))
@@ -59,15 +62,19 @@ func init() {
 			}
 
 			url = path.Base(url)
+			fmt.Printf("%v\n", string(url))
 			pixivIdString := compilerNum.FindString(url)
 			pixivId, _ := strconv.ParseInt(pixivIdString, 10, 64)
+			fmt.Printf("%v\n", string(pixivId))
 			imgName, err := utils.DownloadImageFromPixiv(pixivId, imgPath)
+			fmt.Printf("%v\n", string(imgName))
 			if err != nil {
 				ctx.SendChain(message.Text("下载失败力，重试罢"))
 				return
 			}
 			pathName, _ := filepath.Abs(path.Join(imgPath, imgName))
 			pathName = "file://" + pathName
+			fmt.Printf("%v\n", string(pathName))
 			ctx.SendChain(message.Image(pathName))
 		})
 }
