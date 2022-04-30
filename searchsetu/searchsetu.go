@@ -1,20 +1,13 @@
 package searchsetu
 
 import (
-	"bytes"
-	"errors"
-	"fmt"
-	"github.com/FloatTech/ZeroBot-Plugin/utils"
 	"github.com/FloatTech/zbputils/control"
 	"github.com/FloatTech/zbputils/ctxext"
 	"github.com/FloatTech/zbputils/web"
-	loliconApiPool "github.com/Sora233/LoliconApi-Pool"
-	"github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
+	"github.com/tlogn/plugin_random_setu/utils"
 	zero "github.com/wdvxdr1123/ZeroBot"
 	"github.com/wdvxdr1123/ZeroBot/message"
-	"image"
-	"io/ioutil"
 	url2 "net/url"
 	"os"
 	"path"
@@ -79,6 +72,7 @@ func init() {
 		})
 }
 
+/*
 func downloadImgFromLolicon(keyword string, r18 bool) ([]string, error) {
 	pool, err := loliconApiPool.NewLoliconPool(&loliconApiPool.Config{
 		ApiKey:   keyword, // use your api key here
@@ -120,4 +114,4 @@ func downloadImgFromLolicon(keyword string, r18 bool) ([]string, error) {
 		ret = append(ret, filename)
 	}
 	return ret, nil
-}
+} */
