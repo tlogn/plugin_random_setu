@@ -98,6 +98,9 @@ func randDownloadImage() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	if len(resJson.Data.Illusts) == 0 {
+		return "", errors.New("resJson.Data is nil")
+	}
 	imgName, err := downloadImageFromID(resJson.Data.Illusts[0].ID)
 	if err != nil {
 		//return randDownloadImage()
