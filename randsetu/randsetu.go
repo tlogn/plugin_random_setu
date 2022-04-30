@@ -5,7 +5,7 @@ package randsetu
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
+	"github.com/FloatTech/ZeroBot-Plugin/utils"
 	"github.com/FloatTech/zbputils/web"
 	"io/ioutil"
 	"math/rand"
@@ -15,7 +15,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/FloatTech/AnimeAPI/pixiv"
 	control "github.com/FloatTech/zbputils/control"
 	"github.com/FloatTech/zbputils/ctxext"
 	zero "github.com/wdvxdr1123/ZeroBot"
@@ -79,20 +78,6 @@ func randSetuApi() (r resultjson, err error) {
 	return
 }
 
-func downloadImageFromID(id int64) (string, error) {
-	illust, err := pixiv.Works(id)
-	if err != nil || len(illust.ImageUrls) == 0 || illust.ImageUrls[0] == "" {
-		return "", errors.New("downloadImageFromId error")
-	}
-	/*
-		for err != nil || illust.ImageUrls[0] == "" {
-			illust, err = pixiv.Works(id)
-		}*/
-	u := illust.ImageUrls[0]
-	n := path.Base(u)
-	return n, illust.Download(0, path.Join(imgPath, n))
-}
-
 func randDownloadImage() (string, error) {
 	resJson, err := randSetuApi()
 	if err != nil {
@@ -101,7 +86,7 @@ func randDownloadImage() (string, error) {
 	if len(resJson.Data.Illusts) == 0 {
 		return "", errors.New("resJson.Data is nil")
 	}
-	imgName, err := downloadImageFromID(resJson.Data.Illusts[0].ID)
+	imgName, err := utils.DownloadImageFromPixiv(resJson.Data.Illusts[0].ID, imgPath)
 	if err != nil {
 		//return randDownloadImage()
 		return "", err
@@ -125,7 +110,6 @@ func init() { // 插件主体
 			imgName := imgFIFO.get()
 			pathName, _ := filepath.Abs(path.Join(imgPath, imgName))
 			pathName = "file://" + pathName
-			fmt.Println(pathName)
 			if imgName == "" {
 				ctx.SendChain(message.Text("别急别急，在下载了，哼哼哼啊啊啊啊啊啊啊啊"))
 				return
