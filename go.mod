@@ -1,4 +1,4 @@
-module github.com/FloatTech/ZeroBot-Plugin
+module github.com/tlogn/plugin_random_setu
 
 go 1.18
 
