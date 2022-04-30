@@ -42,9 +42,11 @@ func init() {
 			url := api + "?tag=" + url2.QueryEscape(keyword)
 			if r18 {
 				url += "&r18=1"
+			} else {
+				url += "&r18=0"
 			}
 
-			data, err := web.GetData(api + "?tag=" + url2.QueryEscape(`萝莉`) + "&r18=1")
+			data, err := web.GetData(url)
 			if err != nil {
 				ctx.SendChain(message.Text("什么怪xp，涩图数据库都搜不到，建议看看心理医生捏"))
 				return
