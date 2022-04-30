@@ -16,6 +16,6 @@
 
 ## 插件安装方式
 1. 在ZeroBot-Plugin目录下输入 go get github.com/tlogn/plugin_random_setu@main
-2. 在ZeroBot-Plugin的main.go中，在import里面加一句 _ "github.com/tlogn/plugin_random_setu/randsetu"
+2. 在ZeroBot-Plugin的main.go中，在import里面加一句 _ "github.com/tlogn/plugin_random_setu/randsetu"，其余插件同理
 3. 在ZeroBot-Plugin目录下输入 go mod tidy
 4. 在ZeroBot-Plugin目录下输入 go run main.go config.go 直接运行，或者输入 sh run.sh 编译后运行
