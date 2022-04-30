@@ -5,8 +5,8 @@ package randsetu
 import (
 	"encoding/json"
 	"errors"
-	"github.com/FloatTech/ZeroBot-Plugin/utils"
 	"github.com/FloatTech/zbputils/web"
+	"github.com/tlogn/plugin_random_setu/utils"
 	"io/ioutil"
 	"math/rand"
 	"os"
