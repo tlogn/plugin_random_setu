@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"time"
 )
 
 const (
@@ -39,7 +40,7 @@ func init() {
 			}
 			keyword := msg[len(msg)-1]
 
-			url := api + "?tag=" + url2.QueryEscape(keyword)
+			url := api + "?keyword=" + url2.QueryEscape(keyword)
 			if r18 {
 				url += "&r18=1"
 			} else {
@@ -48,13 +49,13 @@ func init() {
 
 			data, err := web.GetData(url)
 			if err != nil {
-				ctx.SendChain(message.Text("什么怪xp，涩图数据库都搜不到，建议看看心理医生捏"))
+				ctx.SendChain(message.Text("你的xp太奇怪了！"))
 				return
 			}
 			json := gjson.ParseBytes(data)
 			url = json.Get("data.0.urls.original").Str
 			if url == "" {
-				ctx.SendChain(message.Text("搜索失败力，重试罢"))
+				ctx.SendChain(message.Text("呜呜呜，搜索失败了啦"))
 				return
 			}
 
@@ -63,12 +64,15 @@ func init() {
 			pixivId, _ := strconv.ParseInt(pixivIdString, 10, 64)
 			imgName, err := utils.DownloadImageFromPixiv(pixivId, imgPath)
 			if err != nil {
-				ctx.SendChain(message.Text("下载失败力，重试罢"))
+				ctx.SendChain(message.Text("呜呜呜，下载失败了啦"))
 				return
 			}
 			pathName, _ := filepath.Abs(path.Join(imgPath, imgName))
 			pathName = "file://" + pathName
-			ctx.SendChain(message.Image(pathName))
+			setu := ctx.SendChain(message.Image(pathName))
+
+			time.Sleep(10 * time.Second)
+			ctx.DeleteMessage(setu);
 		})
 }
 
